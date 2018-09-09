@@ -2,7 +2,7 @@
 to represent them, but I was doing this when I was staying up for a sleep-deprived EEG 
 and I thought it was pretty funny that I spent so much time doing it"""
 
-def translateToNum(pixel):
+def translate_to_num(pixel):
 	if pixel == [0,0,0]:
 		return 0
 	elif pixel == [0,0,1]:
@@ -14,7 +14,7 @@ def translateToNum(pixel):
 	elif pixel == [0,1,0]:
 		return 4
 	elif pixel == [0,1,1]:
-		return 5
+		return 
 	elif pixel == [0,1,2]:
 		return 6
 	elif pixel == [0,1,3]:
@@ -135,135 +135,135 @@ def translateToNum(pixel):
 	elif pixel == [3,3,3]:
 		return 63
 
-def translateToPixel(colorAsNum):
-	if colorAsNum == 0:
+def translate_to_pixel(color_as_num):
+	if color_as_num == 0:
 		return [0,0,0]
-	elif colorAsNum == 1:
+	elif color_as_num == 1:
 		return [0,0,1]
-	elif colorAsNum == 2:
+	elif color_as_num == 2:
 		return [0,0,2]
-	elif colorAsNum == 3:
+	elif color_as_num == 3:
 		return [0,0,3]
-	elif colorAsNum == 4:
+	elif color_as_num == 4:
 		return [0,1,0]
-	elif colorAsNum == 5:
+	elif color_as_num == 5:
 		return [0,1,1]
-	elif colorAsNum == 6:
+	elif color_as_num == 6:
 		return [0,1,2]
-	elif colorAsNum == 7:
+	elif color_as_num == 7:
 		return [0,1,3]
-	elif colorAsNum == 8:
+	elif color_as_num == 8:
 		return [0,2,0]
-	elif colorAsNum == 9:
+	elif color_as_num == 9:
 		return [0,2,1]
-	elif colorAsNum == 10:
+	elif color_as_num == 10:
 		return [0,2,2]
-	elif colorAsNum == 11:
+	elif color_as_num == 11:
 		return [0,2,3]
-	elif colorAsNum == 12:
+	elif color_as_num == 12:
 		return [0,3,0]
-	elif colorAsNum == 13:
+	elif color_as_num == 13:
 		return [0,3,1]
-	elif colorAsNum == 14:
+	elif color_as_num == 14:
 		return [0,3,2]
-	elif colorAsNum == 15:
+	elif color_as_num == 15:
 		return [0,3,3]
 
-	elif colorAsNum == 16:
+	elif color_as_num == 16:
 		return [1,0,0]
-	elif colorAsNum == 17:
+	elif color_as_num == 17:
 		return [1,0,1]
-	elif colorAsNum == 18:
+	elif color_as_num == 18:
 		return [1,0,2]
-	elif colorAsNum == 19:
+	elif color_as_num == 19:
 		return [1,0,3]
-	elif colorAsNum == 20:
+	elif color_as_num == 20:
 		return [1,1,0]
-	elif colorAsNum == 21:
+	elif color_as_num == 21:
 		return [1,1,1]
-	elif colorAsNum == 22:
+	elif color_as_num == 22:
 		return [1,1,2]
-	elif colorAsNum == 23:
+	elif color_as_num == 23:
 		return [1,1,3]
-	elif colorAsNum == 24:
+	elif color_as_num == 24:
 		return [1,2,0]
-	elif colorAsNum == 25:
+	elif color_as_num == 25:
 		return [1,2,1]
-	elif colorAsNum == 26:
+	elif color_as_num == 26:
 		return [1,2,2]
-	elif colorAsNum == 27:
+	elif color_as_num == 27:
 		return [1,2,3]
-	elif colorAsNum == 28:
+	elif color_as_num == 28:
 		return [1,3,0]
-	elif colorAsNum == 29:
+	elif color_as_num == 29:
 		return [1,3,1]
-	elif colorAsNum == 30:
+	elif color_as_num == 30:
 		return [1,3,2]
-	elif colorAsNum == 31:
+	elif color_as_num == 31:
 		return [1,3,3]
 
-	elif colorAsNum == 32:
+	elif color_as_num == 32:
 		return [2,0,0]
-	elif colorAsNum == 33:
+	elif color_as_num == 33:
 		return [2,0,1]
-	elif colorAsNum == 34:
+	elif color_as_num == 34:
 		return [2,0,2]
-	elif colorAsNum == 35:
+	elif color_as_num == 35:
 		return [2,0,3]
-	elif colorAsNum == 36:
+	elif color_as_num == 36:
 		return [2,1,0]
-	elif colorAsNum == 37:
+	elif color_as_num == 37:
 		return [2,1,1]
-	elif colorAsNum == 38:
+	elif color_as_num == 38:
 		return [2,1,2]
-	elif colorAsNum == 39:
+	elif color_as_num == 39:
 		return [2,1,3]
-	elif colorAsNum == 40:
+	elif color_as_num == 40:
 		return [2,2,0]
-	elif colorAsNum == 41:
+	elif color_as_num == 41:
 		return [2,2,1]
-	elif colorAsNum == 42:
+	elif color_as_num == 42:
 		return [2,2,2]
-	elif colorAsNum == 43:
+	elif color_as_num == 43:
 		return [2,2,3]
-	elif colorAsNum == 44:
+	elif color_as_num == 44:
 		return [2,3,0]
-	elif colorAsNum == 45:
+	elif color_as_num == 45:
 		return [2,3,1]
-	elif colorAsNum == 46:
+	elif color_as_num == 46:
 		return [2,3,2]
-	elif colorAsNum == 47:
+	elif color_as_num == 47:
 		return [2,3,3]
 
-	elif colorAsNum == 48:
+	elif color_as_num == 48:
 		return [3,0,0]
-	elif colorAsNum == 49:
+	elif color_as_num == 49:
 		return [3,0,1]
-	elif colorAsNum == 50:
+	elif color_as_num == 50:
 		return [3,0,2]
-	elif colorAsNum == 51:
+	elif color_as_num == 51:
 		return [3,0,3]
-	elif colorAsNum == 52: 
+	elif color_as_num == 52: 
 		return [3,1,0]
-	elif colorAsNum == 53:
+	elif color_as_num == 53:
 		return [3,1,1]
-	elif colorAsNum == 54:
+	elif color_as_num == 54:
 		return [3,1,2]
-	elif colorAsNum == 55:
+	elif color_as_num == 55:
 		return [3,1,3]
-	elif colorAsNum == 56:
+	elif color_as_num == 56:
 		return [3,2,0]
-	elif colorAsNum == 57:
+	elif color_as_num == 57:
 		return [3,2,1]
-	elif colorAsNum == 58:
+	elif color_as_num == 58:
 		return [3,2,2]
-	elif colorAsNum == 59:
+	elif color_as_num == 59:
 		return [3,2,3]
-	elif colorAsNum == 60:
+	elif color_as_num == 60:
 		return [3,3,0]
-	elif colorAsNum == 61:
+	elif color_as_num == 61:
 		return [3,3,1]
-	elif colorAsNum == 62:
+	elif color_as_num == 62:
 		return [3,3,2]
-	elif colorAsNum == 63:
+	elif color_as_num == 63:
 		return [3,3,3]

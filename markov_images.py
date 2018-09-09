@@ -6,16 +6,28 @@
 Authors: Dustin Hines
 Course: CS3725
 Assignment: M2
+Date: 9/12/2018
+Description:  
+	This module implements a markov chain to generate images based on a given training set.
+	Currently, the training set is composed of a single image, but this could easily be expanded
+	by reading in additional images.  From the training set, the likelihood of transitioning from a
+	pixel of each color to the next is determined and put into a transition matrix.  To keep things 
+	simpler and to avoid working with a 16777216x16777216 transition matrix, RGB pixel values are 
+	simplified and broken into 64 distint values depending on the original R, G, and B values
+	divided with integer division by 64 (Thus turning each color value in the pixel into one of 4
+	values in the range [0,3]).  
+
+	After calculating the transition matrix, 
 
 Let it be known that I named everything using camel case until I read the style guide and needed
-to then change all the variable, function names, etc.  ¯\_(ツ)_/¯
+to then change all the variable, function names, etc.  ¯\_(ツ)_/¯  Thankfully, find and replace exists.
 """
 
 import numpy 
 import scipy
-from PIL import Image
+from PIL import image
 import random
-import importImage
+#import importImage
 import colorToNumber
 
 X_DIMENSION_GENERATED = 50
@@ -35,8 +47,6 @@ def simple_colors(pixel):
 	"""
 	simplified = [pixel[0]//64, pixel[1]//64, pixel[2]//64]
 	return simplified
-
-
 
 
 def determine_start(input_pixels):
@@ -61,27 +71,37 @@ def determine_start(input_pixels):
 	return start #start with a pixel of this color 
 	
 
-def import_and_resize(imagePath):
-	image = Image.open(imagePath)
-	resized = image.resize((resizeX, resizeY), Image.BICUBIC)
+def import_and_resize(image_path):
+	"""
+	Purpose: Helper function that imports an image from a given image path (specified by global)
+			 and resizes and returns the image represented as a list of pixel values where 
+			 each pixel is represented by a list of the R, G, and B color values.
+	Input: Image path as a string.
+	Return: List of pixel values for the resized image.
+	"""
+	image = image.open(image_path)
+	#RESIZE_X/Y are specified with a global
+	resized = image.resize((RESIZE_X, RESIZE_Y), image.BICUBIC)
 	return resized
 
 
-def calculateTransitionMatrix(inputPixels):
-	"""Possible Colors: 64
+def calculate_transition_matrix(input_pixels):
+	"""
+	Purpose: 
 	"""
 
-	transitionCounts = []
-	for x in range(0,64):
+	transition_counts = []
+	#create a zero filled 64x64 matrix as a list of lists
+	for each in range(0,64):
 		row = [0] * 64
-		transitionCounts.append(row)
+		transition_counts.append(row)
 
-	for index in range(0,len(inputPixels) - 1):
-		colorFirst = simpleColors(inputPixels[index])
-		colorFirstAsNum = colorToNumber.translateToNum(colorFirst)
+	for index in range(0,len(input_pixels) - 1):
+		color_first = simple_colors(inputPixels[index])
+		colorFirstAsNum = colorToNumber.translate_to_num(colorFirst)
 		nextPixel = inputPixels[index + 1]
 		colorNext = simpleColors(nextPixel)
-		colorNextAsNum = colorToNumber.translateToNum(colorNext)
+		colorNextAsNum = colorToNumber.translate_to_num(colorNext)
 		transitionCounts[colorFirstAsNum][colorNextAsNum] += 1
 
 	transitionMatrix = transitionCounts
@@ -109,7 +129,7 @@ def main():
 	inputPixelList = list(image.getdata())
 	startingPixel = determineStart(inputPixelList)
 	simpleStart = simpleColors(startingPixel)
-	startAsNum = colorToNumber.translateToNum(simpleStart)
+	startAsNum = colorToNumber.translate_to_num(simpleStart)
 	transitionMatrix = calculateTransitionMatrix(inputPixelList)
 	generatedImage = numpy.zeros((X_DIMENSION_GENERATED, Y_DIMENSION_GENERATED, 3), dtype=numpy.uint8)
 
