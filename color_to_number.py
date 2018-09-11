@@ -1,8 +1,10 @@
 """This is clearly a dumb was of accomplishing a mapping between vectors and a number
 to represent them, but I was doing this when I was staying up for a sleep-deprived EEG 
 and I thought it was pretty funny that I spent so much time doing it"""
+COLOR_RANGES = 8
 
-def translate_to_num(pixel):
+
+
 	if pixel == [0,0,0]:
 		return 0
 	elif pixel == [0,0,1]:
@@ -14,7 +16,7 @@ def translate_to_num(pixel):
 	elif pixel == [0,1,0]:
 		return 4
 	elif pixel == [0,1,1]:
-		return 
+		return 5
 	elif pixel == [0,1,2]:
 		return 6
 	elif pixel == [0,1,3]:
@@ -136,6 +138,11 @@ def translate_to_num(pixel):
 		return 63
 
 def translate_to_pixel(color_as_num):
+	colors_in_range = 256 // COLOR_RANGES
+	red = color_as_num // (colors_in_range * colors_in_range) % colors_in_range
+	green = color_as_num // colors_in_range % colors_in_range
+	blue = color_as_num % colors_in_range
+	return [red, green, blue]
 	if color_as_num == 0:
 		return [0,0,0]
 	elif color_as_num == 1:

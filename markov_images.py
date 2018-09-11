@@ -24,17 +24,19 @@ to then change all the variable, function names, etc.  ¯\_(ツ)_/¯  Thankfully
 """
 
 import numpy 
-import scipy
-from PIL import image
+import scipy.misc as scipy_misc
+from PIL import Image as image_module
 import random
-#import importImage
-import colorToNumber
+import os
 
-X_DIMENSION_GENERATED = 50
-Y_DIMENSION_GENERATED = 50
-RESIZE_X = 50
-RESIZE_Y = 50
-FILE_PATH = '/Users/dhines/Desktop/picasso.png'
+X_DIMENSION_GENERATED = 100
+Y_DIMENSION_GENERATED = 100
+RESIZE_X = 200
+RESIZE_Y = 200
+FINAL_X = 5000
+FINAL_Y = 5000
+WIDTH_COLOR_RANGES = 16
+FILE_PATH = "input3"
 
 def simple_colors(pixel):
 	"""
@@ -45,7 +47,7 @@ def simple_colors(pixel):
 	Return: A list of pixel values where R, G, and B can each be a value in the range
 		    [0,3], meaning that there 64 possible simple colors
 	"""
-	simplified = [pixel[0]//64, pixel[1]//64, pixel[2]//64]
+	simplified = [pixel[0]//WIDTH_COLOR_RANGES, pixel[1]//WIDTH_COLOR_RANGES, pixel[2]//WIDTH_COLOR_RANGES]
 	return simplified
 
 
@@ -74,96 +76,147 @@ def determine_start(input_pixels):
 def import_and_resize(image_path):
 	"""
 	Purpose: Helper function that imports an image from a given image path (specified by global)
-			 and resizes and returns the image represented as a list of pixel values where 
+			 and resizes and returns the images represented as a list of pixel values where 
 			 each pixel is represented by a list of the R, G, and B color values.
 	Input: Image path as a string.
-	Return: List of pixel values for the resized image.
+	Return: List of pixel values for the resized images.
 	"""
-	image = image.open(image_path)
-	#RESIZE_X/Y are specified with a global
-	resized = image.resize((RESIZE_X, RESIZE_Y), image.BICUBIC)
-	return resized
+	training_set = []
+	
+	for file in os.listdir(FILE_PATH):
+		if file[0] == '.':
+			continue
+		print(file)
+		image = image_module.open(FILE_PATH + "/" + file)
+		#image.show()
+		#RESIZE_X/Y are specified with a global
+		resized = image.resize((RESIZE_X, RESIZE_Y), image_module.BICUBIC)
+		training_set.append(resized)
+	"""
+	image = image_module.open("input/download.jpeg")
+	resized = image.resize((RESIZE_X, RESIZE_Y), image_module.BICUBIC)
+	training_set.append(resized)
+	"""
+	return training_set
 
 
-def calculate_transition_matrix(input_pixels):
+def translate_to_num(pixel):
+	colors_in_range = 256 // WIDTH_COLOR_RANGES
+	return pixel[0] * colors_in_range * colors_in_range + pixel[1] * colors_in_range + pixel[2] 
+
+
+def translate_to_pixel(color_as_num):
+	colors_in_range = 256 // WIDTH_COLOR_RANGES
+	red = color_as_num // (colors_in_range * colors_in_range) % colors_in_range
+	green = color_as_num // colors_in_range % colors_in_range
+	blue = color_as_num % colors_in_range
+	return [red, green, blue]
+
+
+def calculate_transition_matrix(training_set):
 	"""
 	Purpose: 
-	"""
+	"""	
+	transition_matrixes = []
+	for image in training_set:
+		transition_counts = []
+		#create a zero filled 64x64 matrix as a list of lists
+		num_colors = pow(256 // WIDTH_COLOR_RANGES, 3)
+		for each in range(0, num_colors):
+			row = [0] * num_colors
+			transition_counts.append(row)
+		for index in range(0,len(image) - 1):
+			color_first = simple_colors(image[index])
+			color_first_as_num = translate_to_num(color_first)
+			next_pixel = image[index + 1]
+			color_next = simple_colors(next_pixel)
+			color_next_as_num = translate_to_num(color_next)
+			transition_counts[color_first_as_num][color_next_as_num] += 1
 
-	transition_counts = []
-	#create a zero filled 64x64 matrix as a list of lists
-	for each in range(0,64):
-		row = [0] * 64
-		transition_counts.append(row)
-
-	for index in range(0,len(input_pixels) - 1):
-		color_first = simple_colors(inputPixels[index])
-		colorFirstAsNum = colorToNumber.translate_to_num(colorFirst)
-		nextPixel = inputPixels[index + 1]
-		colorNext = simpleColors(nextPixel)
-		colorNextAsNum = colorToNumber.translate_to_num(colorNext)
-		transitionCounts[colorFirstAsNum][colorNextAsNum] += 1
-
-	transitionMatrix = transitionCounts
-	for x in range(0, len(transitionMatrix)):
-		rowSum = 0
-		for value in transitionMatrix[x]:
-			rowSum += value
-		if rowSum == 0:
-			continue
-		for y in range(0, len(transitionMatrix[x])):
-			transitionSum = transitionMatrix[x][y] 
-			transitionMatrix[x][y] = transitionSum / rowSum
-
-	for row in transitionMatrix:
-		rowSum = 0
-		for value in row:
-			rowSum += value
-		print(rowSum)
-	return transitionMatrix
+		transition_matrix = transition_counts.copy()
+		for row in range(0, len(transition_matrix)):
+			row_sum = 0
+			for value in transition_matrix[row]:
+				row_sum += value
+			if row_sum == 0:
+				continue
+			#for each value in the row, divide by sum for row overall 
+			for column in range(0, len(transition_matrix[row])):
+				transition_sum = transition_matrix[row][column] 
+				transition_matrix[row][column] = transition_sum / row_sum
+		#testing
+		"""for row in transition_matrix:
+			row_sum = 0
+			for value in row:
+				row_sum += value
+			if row_sum != 0:
+				print(row_sum)
+			"""
+		print("Finished transition matrix.")
+		transition_matrixes.append(transition_matrix)
+	print("All matrixes calculated.")
+	return transition_matrixes
 
 
 def main():
 
-	image = importImage.importAndResize(filePath)
-	inputPixelList = list(image.getdata())
-	startingPixel = determineStart(inputPixelList)
-	simpleStart = simpleColors(startingPixel)
-	startAsNum = colorToNumber.translate_to_num(simpleStart)
-	transitionMatrix = calculateTransitionMatrix(inputPixelList)
-	generatedImage = numpy.zeros((X_DIMENSION_GENERATED, Y_DIMENSION_GENERATED, 3), dtype=numpy.uint8)
+	training_set = import_and_resize(FILE_PATH)
+	training_pixels = []
+	for image in training_set:
+		training_pixels.append(list(image.getdata()))
+	starting_pixels = []
+	for image in training_pixels:
+		starting_pixels.append(simple_colors(image[0]))
 
-	state = startAsNum
-	for row in range(0, len(generatedImage)):
-		for pixel in range(0, len(generatedImage[row])):
-			randomVal = random.random()
-			lowerEnd = 0
-			transFromCurrState = transitionMatrix[state]
-			for index in range(0, len(transFromCurrState)):
-				probability = transFromCurrState[index]
-				if probability + lowerEnd < randomVal:
-					simpleNextPixel = colorToNumber.translateToPixel(index)
-					#some random numbers to expand the simplified pixels back into real colors
-					r1 = random.randint(0, 65)
-					r2 = random.randint(0, 64)
-					r3 = random.randint(0, 65)
-					r4 = random.randint(0, 64)
-					r5 = random.randint(0, 65)
-					r6 = random.randint(0, 64)
-					redFullColor = simpleNextPixel[0]*64 + r2
-					greenFullColor = simpleNextPixel[1]*64 + r4
-					blueFullColor = simpleNextPixel[2]*64 + r6
-					generatedImage[row][pixel] = [redFullColor, greenFullColor, blueFullColor]
-					#print(pixel)
+	transition_matrixes = calculate_transition_matrix(training_pixels)
+	generated_image = numpy.zeros((X_DIMENSION_GENERATED, Y_DIMENSION_GENERATED, 3), dtype=numpy.uint8)
+
+	print(starting_pixels)
+	state = translate_to_num(starting_pixels[0])
+	print(state)
+	num_matrixes = len(transition_matrixes)
+	switch_matrix_per_rows = random.randint(X_DIMENSION_GENERATED//100, X_DIMENSION_GENERATED//10)
+	curr_matrix = 0
+	for row in range(0, len(generated_image)):
+		print("Generated Image Row: {}".format(row + 1))
+		if row == switch_matrix_per_rows:
+			curr_matrix += 1
+			curr_matrix = curr_matrix % num_matrixes
+			switch_matrix_per_rows = switch_matrix_per_rows + random.randint(X_DIMENSION_GENERATED//100, X_DIMENSION_GENERATED//10)
+			state = translate_to_num(starting_pixels[curr_matrix])
+			
+
+		for pixel in range(0, len(generated_image[row])):
+			random_val = random.random()
+			lower_end = 0
+			trans_from_curr_state = transition_matrixes[curr_matrix][state]
+			for index in range(0, len(trans_from_curr_state)):
+				probability = trans_from_curr_state[index]
+
+				if random_val < probability + lower_end:
+					simple_next_pixel = translate_to_pixel(index)
+					"""
+					#some random numbers to expand the simplified pixels back throughout the ranges
+					r1 = random.randint(0, 31)
+					r2 = random.randint(0, 31)
+					r3 = random.randint(0, 31)
+					"""
+					red_full_color = simple_next_pixel[0] * WIDTH_COLOR_RANGES 
+					green_full_color = simple_next_pixel[1] * WIDTH_COLOR_RANGES 
+					blue_full_color = simple_next_pixel[2] * WIDTH_COLOR_RANGES 
+					generated_image[row][pixel] = [red_full_color, green_full_color, blue_full_color]
 					state = index
-				lowerEnd += probability
+					break
+				lower_end += probability
 
 
 
 
 
 
-	image = scipy.misc.toimage(generatedImage)       
+	image = scipy_misc.toimage(generated_image)
+	image.resize((FINAL_X, FINAL_Y), image_module.NEAREST)
+	scipy_misc.imsave("curr_test.png", image)    
 	image.show()                      			
 	
 main()
