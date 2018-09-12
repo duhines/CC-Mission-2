@@ -34,6 +34,14 @@ Bugs:
 	set to strange things (i.e. a WIDTH_COLOR_RANGES of 256 would create a
 	black image).
 
+	Additionally, a solid next step would be to implement sparsely populated
+	lists (if possible) but I did not have time to do this!  This would likely
+	allow for transition matrices using the full 16 million + colors normally 
+	encoded in pixels.  
+
+	The images produced are very stripey.  As far as I can tell, this is not a
+	bug and my code is doing what I think it is.  But, maybe I'm wrong!
+
 Some things I looked at:
 	https://stackoverflow.com/questions/434583/what-is-the-fastest-way-to-draw-
 		an-image-from-discrete-pixel-values-in-python
