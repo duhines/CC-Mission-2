@@ -1,25 +1,38 @@
-#https://stackoverflow.com/questions/434583/what-is-the-fastest-way-to-draw-an-image-from-discrete-pixel-values-in-python
-#  getting a feel for how to draw images in python
-#https://www.hackerearth.com/practice/notes/extracting-pixel-values-of-an-image-in-python/
-#  extracting pixel values from an image file
+
 """
 Authors: Dustin Hines
 Course: CS3725
 Assignment: M2
 Date: 9/12/2018
 Description:  
-	This module implements a markov chain to generate images based on a given training set.
-	Currently, the training set is composed of a single image, but this could easily be expanded
-	by reading in additional images.  From the training set, the likelihood of transitioning from a
-	pixel of each color to the next is determined and put into a transition matrix.  To keep things 
-	simpler and to avoid working with a 16777216x16777216 transition matrix, RGB pixel values are 
-	simplified and broken into 64 distint values depending on the original R, G, and B values
-	divided with integer division by 64 (Thus turning each color value in the pixel into one of 4
-	values in the range [0,3]).  
+	This module implements a markov chain to generate images based on a given 
+	training set.  Currently, the training set is composed of a single image,
+	but this could easily be expanded by reading in additional images.  From 
+	the training set, the likelihood of transitioning from a pixel of each 
+	color to the next is determined and put into a transition matrix.  To keep
+	things simpler and to avoid working with a 16777216x16777216 transition 
+	matrix, RGB pixel values are simplified and broken into ranges smaller 
+	than 256 as specified by WIDTH_COLOR_RANGES.  The range for each pixel 
+	value becomes 256 divided by the WIDTH_COLOR_RANGES variable.   
 
 	After calculating the transition matrix, 
 
-Let it be known that I named everything using camel case until I read the style guide and needed
+
+Some things I looked at:
+https://stackoverflow.com/questions/434583/what-is-the-fastest-way-to-draw-an-image-from-
+	  discrete-pixel-values-in-python
+->getting a feel for how to draw images in python
+https://www.hackerearth.com/practice/notes/extracting-pixel-values-of-an-image-in-python/
+->extracting pixel values from an image file
+
++scipy documentation on resizing
+
+I also read a medium article (I think?) about Markov chains and images but I forget 
+exactly what it was and I still have no idea how he was doing what he was doing since 
+he was training on multiple images and producing an image that was a kind of strange blend
+of them.  
+
+*Let it be known that I named everything using camel case until I read the style guide and needed
 to then change all the variable, function names, etc.  ¯\_(ツ)_/¯  Thankfully, find and replace exists.
 """
 
@@ -29,8 +42,8 @@ from PIL import Image as image_module
 import random
 import os
 
-X_DIMENSION_GENERATED = 100
-Y_DIMENSION_GENERATED = 100
+X_DIM_GEN = 1000
+Y_DIM_GEN = 100
 RESIZE_X = 200
 RESIZE_Y = 200
 FINAL_X = 5000
@@ -38,40 +51,22 @@ FINAL_Y = 5000
 WIDTH_COLOR_RANGES = 16
 FILE_PATH = "input3"
 
+
 def simple_colors(pixel):
 	"""
 	Purpose: Categorize the 256*256*256 possible colors normally available to a pixel
-			 into 64 simple colors so that our transition matrix isnt 16777216x16777216
-			 in size.
+			 into (256//WIDTH_COLOR_RANGES)^3 simple colors so that our transition matrix 
+			 isnt 16777216x16777216 in size (my computer doesnt have that much memory :( ).
 	Input: A pixel value given as a list of the R, G, and B values.
 	Return: A list of pixel values where R, G, and B can each be a value in the range
-		    [0,3], meaning that there 64 possible simple colors
+		    [0,256//16], meaning that there (256//16)^3 possible simple colors
 	"""
-	simplified = [pixel[0]//WIDTH_COLOR_RANGES, pixel[1]//WIDTH_COLOR_RANGES, pixel[2]//WIDTH_COLOR_RANGES]
+	simple_red = pixel[0]//WIDTH_COLOR_RANGES
+	simple_green = pixel[1]//WIDTH_COLOR_RANGES
+	simple_blue = pixel[2]//WIDTH_COLOR_RANGES
+	simplified = [simple_red, simple_green, simple_blue]
 	return simplified
 
-
-def determine_start(input_pixels):
-	"""
-	Purpose: Choose a starting pixel value based off the input image by adding up 
-		     all the R, G, and B values and then using modulo division on all these
-		     values to get them back in the range of a real pixel.
-    Input: List of pixel values where each pixel value is a list of the R, G, and B
-    	   Values.
-   	Return: A list of the starting R, G, and B values.
-   	"""
-	red_sum = 0
-	blue_sum = 0
-	green_sum = 0
-
-	for pixel in input_pixels:
-		red_sum += pixel[0]
-		green_sum += pixel[1]
-		blue_sum += pixel[2]
-		
-	start = [red_sum % 255, green_sum % 255, blue_sum % 255]
-	return start #start with a pixel of this color 
-	
 
 def import_and_resize(image_path):
 	"""
@@ -88,24 +83,33 @@ def import_and_resize(image_path):
 			continue
 		print(file)
 		image = image_module.open(FILE_PATH + "/" + file)
-		#image.show()
 		#RESIZE_X/Y are specified with a global
 		resized = image.resize((RESIZE_X, RESIZE_Y), image_module.BICUBIC)
 		training_set.append(resized)
-	"""
-	image = image_module.open("input/download.jpeg")
-	resized = image.resize((RESIZE_X, RESIZE_Y), image_module.BICUBIC)
-	training_set.append(resized)
-	"""
+
 	return training_set
 
 
 def translate_to_num(pixel):
+	"""
+	Purpose: Take a given pixel and associate it with a number unique to this pixel in the range
+	[0, number of possible colors given the range simplification].  This is necessary to index
+	into the transition_matrix with a color (can't index an array with a list as far as I know!)
+	Input: A pixel represented by a list of 3 integer values.
+	Return: A number in the range [0, number of possible colors].
+	"""
 	colors_in_range = 256 // WIDTH_COLOR_RANGES
 	return pixel[0] * colors_in_range * colors_in_range + pixel[1] * colors_in_range + pixel[2] 
 
 
 def translate_to_pixel(color_as_num):
+	"""
+	Purpose: Take a number representing a pixel (unique association) and turn it back 
+	into a pixel.  
+	Input: number in range[0, number of possible]
+	Return: A pixel, represented as a list of the 3 color values, that is associated with the 
+		    input number.  
+	"""
 	colors_in_range = 256 // WIDTH_COLOR_RANGES
 	red = color_as_num // (colors_in_range * colors_in_range) % colors_in_range
 	green = color_as_num // colors_in_range % colors_in_range
@@ -115,9 +119,13 @@ def translate_to_pixel(color_as_num):
 
 def calculate_transition_matrix(training_set):
 	"""
-	Purpose: 
+	Purpose: Calculate a transition matrix for each image in the training set.
+	Input: List of images where each image is represented by a list of pixels values 
+		   where each pixel value is a list of the R, G, and B values.
+	Return: A list of transition matrixes for each of the images in the input 
+			training set.  
 	"""	
-	transition_matrixes = []
+	trans_matrixes = []
 	for image in training_set:
 		transition_counts = []
 		#create a zero filled 64x64 matrix as a list of lists
@@ -125,6 +133,7 @@ def calculate_transition_matrix(training_set):
 		for each in range(0, num_colors):
 			row = [0] * num_colors
 			transition_counts.append(row)
+		#for each pixel and the pixel after, count the transition
 		for index in range(0,len(image) - 1):
 			color_first = simple_colors(image[index])
 			color_first_as_num = translate_to_num(color_first)
@@ -133,6 +142,9 @@ def calculate_transition_matrix(training_set):
 			color_next_as_num = translate_to_num(color_next)
 			transition_counts[color_first_as_num][color_next_as_num] += 1
 
+		#turn the transition counts into a transition matrix 
+		#	by summing the transitions per row and dividing 
+		#	every item in this row sum 
 		transition_matrix = transition_counts.copy()
 		for row in range(0, len(transition_matrix)):
 			row_sum = 0
@@ -140,81 +152,87 @@ def calculate_transition_matrix(training_set):
 				row_sum += value
 			if row_sum == 0:
 				continue
-			#for each value in the row, divide by sum for row overall 
+			#for each value in the row, divide by sum of row overall 
 			for column in range(0, len(transition_matrix[row])):
 				transition_sum = transition_matrix[row][column] 
 				transition_matrix[row][column] = transition_sum / row_sum
-		#testing
-		"""for row in transition_matrix:
-			row_sum = 0
-			for value in row:
-				row_sum += value
-			if row_sum != 0:
-				print(row_sum)
-			"""
+		
 		print("Finished transition matrix.")
-		transition_matrixes.append(transition_matrix)
+		trans_matrixes.append(transition_matrix)
 	print("All matrixes calculated.")
-	return transition_matrixes
+	return trans_matrixes
 
 
-def main():
-
-	training_set = import_and_resize(FILE_PATH)
-	training_pixels = []
-	for image in training_set:
-		training_pixels.append(list(image.getdata()))
-	starting_pixels = []
-	for image in training_pixels:
-		starting_pixels.append(simple_colors(image[0]))
-
-	transition_matrixes = calculate_transition_matrix(training_pixels)
-	generated_image = numpy.zeros((X_DIMENSION_GENERATED, Y_DIMENSION_GENERATED, 3), dtype=numpy.uint8)
-
-	print(starting_pixels)
-	state = translate_to_num(starting_pixels[0])
-	print(state)
-	num_matrixes = len(transition_matrixes)
-	switch_matrix_per_rows = random.randint(X_DIMENSION_GENERATED//100, X_DIMENSION_GENERATED//10)
+def fill_gen_image(gen_image, trans_matrixes, start_pixels):
+	"""
+	Purpose: From a given transition matrix and array of pixels to use to generate
+		images from each of the transition matrixes, fill a new images with pixels
+		chosen randomly proportional to the transition probability determined by the 
+		transition matrix.
+	Input: The image to be filled with randomish pixels, the transition matrixes, 
+		and an array of starting pixel values associated with each transition matrix.
+	Return: The given 3D image array (X_DIM_GENxY_DIM_GENx3) populated with pixel values
+	"""
+	state = translate_to_num(start_pixels[0])
+	num_matrixes = len(trans_matrixes)
+	switch_matrix_per_rows = random.randint(X_DIM_GEN//100, X_DIM_GEN//10)
 	curr_matrix = 0
-	for row in range(0, len(generated_image)):
+	for row in range(0, len(gen_image)):
 		print("Generated Image Row: {}".format(row + 1))
 		if row == switch_matrix_per_rows:
 			curr_matrix += 1
 			curr_matrix = curr_matrix % num_matrixes
-			switch_matrix_per_rows = switch_matrix_per_rows + random.randint(X_DIMENSION_GENERATED//100, X_DIMENSION_GENERATED//10)
-			state = translate_to_num(starting_pixels[curr_matrix])
+			rand_stripe_width = random.randint(X_DIM_GEN//100, X_DIM_GEN//10)
+			switch_matrix_per_rows = switch_matrix_per_rows + rand_stripe_width
+			state = translate_to_num(start_pixels[curr_matrix])
 			
 
-		for pixel in range(0, len(generated_image[row])):
+		for pixel in range(0, len(gen_image[row])):
 			random_val = random.random()
 			lower_end = 0
-			trans_from_curr_state = transition_matrixes[curr_matrix][state]
+			trans_from_curr_state = trans_matrixes[curr_matrix][state]
+			#imagine that the probability of chosing each transition is a slice of a pie
+			#this finds the slice of the pie that our random number landed in
 			for index in range(0, len(trans_from_curr_state)):
 				probability = trans_from_curr_state[index]
-
 				if random_val < probability + lower_end:
+					#our random number is within this slice of the pie!
 					simple_next_pixel = translate_to_pixel(index)
-					"""
-					#some random numbers to expand the simplified pixels back throughout the ranges
-					r1 = random.randint(0, 31)
-					r2 = random.randint(0, 31)
-					r3 = random.randint(0, 31)
-					"""
+					#need to expand the pixel's color back into the color range 
+					#	for a real pixel
 					red_full_color = simple_next_pixel[0] * WIDTH_COLOR_RANGES 
 					green_full_color = simple_next_pixel[1] * WIDTH_COLOR_RANGES 
 					blue_full_color = simple_next_pixel[2] * WIDTH_COLOR_RANGES 
-					generated_image[row][pixel] = [red_full_color, green_full_color, blue_full_color]
+					next_pixel = [red_full_color, green_full_color, blue_full_color]
+					gen_image[row][pixel] = next_pixel
 					state = index
 					break
 				lower_end += probability
+	return gen_image
 
 
+def main():
+	"""
+	Purpose: main function that gets all the balls rolling. 
+	Input: n/a
+	Return: none
+	"""
+	training_set = import_and_resize(FILE_PATH)
+	training_pixels = []
+	#add image representation as pixels to a list 
+	for image in training_set:
+		training_pixels.append(list(image.getdata()))
+	start_pixels = []
+	for image in training_pixels:
+		start_pixels.append(simple_colors(image[0]))
 
-
-
-
-	image = scipy_misc.toimage(generated_image)
+	trans_matrixes = calculate_transition_matrix(training_pixels)
+	#the second stack overflow thread listed in the docstring is where this is from
+	gen_image = numpy.zeros((X_DIM_GEN, Y_DIM_GEN, 3), dtype=numpy.uint8)
+	gen_image = fill_gen_image(gen_image, trans_matrixes, start_pixels)
+	#convert image back from pixel array to a real image format
+	image = scipy_misc.toimage(gen_image)
+	#resize so that the images are uniform regardless of X_GEN_DIM and Y_GEN_DIM
 	image.resize((FINAL_X, FINAL_Y), image_module.NEAREST)
 	scipy_misc.imsave("curr_test.png", image)    
 	image.show()                      			
